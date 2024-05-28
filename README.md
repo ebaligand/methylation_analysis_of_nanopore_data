@@ -110,7 +110,33 @@ for bam in $bam_file_sorted; do
     singularity exec --nv ./methylation_analysis/image_singularity/modkit.sif modkit pileup "$bam" ./methylation_analysis/result_modkit/"$id_patient.bed" --ref ./methylation_analysis/reference/*.fasta --combine-strands --cpg
 done
 ```
+## Step 5 - Filtering BED files
 
+```bash
+bed_file=$(find ./methylation_analysis/result_modkit/*.bed)
+
+for bed in $bed_file; do
+    id_patient=$(basename "$bed" .bed)
+    awk '$4=="m"' "$bed" > "./methylation_analysis/result_modkit/${id_patient}_filtered.bed"
+done
+```
+## Step 6 - Build methylation percent matrix
+
+### Retrieving information of interest in a TXT file
+
+```bash
+bed_file=$(find ./methylation_analysis/result_modkit/*_filtered.bed)
+
+for bed in $bed_file; do
+    id_patient=$(basename "$bed" _filtered.bed);     
+    awk -v pid="$id_patient" '{print pid, $1":"$2, $11}' "$bed" > "${id_patient}_modified.txt";
+done
+```
+### Creation of the matrix
+
+```python
+
+```
 
 
 
