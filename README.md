@@ -17,7 +17,7 @@ Python must be downloaded to your working server to complete certain steps.
 Depending on the size of the data processed, consider using screen.
 
 ## Workflow
-![Workflow.](workflow.png)
+<img src="workflow.png" alt="workflow" width="800"/>
 
 ## Set up 
 
@@ -195,10 +195,10 @@ print(f'Matrix created successfully in {output_filepath}')
 ```
 #### Matrix example
 
-![matrix_example](matrix_example.png)
+<img src="matrix_example.png" alt="matrix_example" width="500"/>
 
 * Columns : genomic position 
-* Rows : Id patient
+* Rows : patient identification
 * Data : methylation percent
 
 
