@@ -197,9 +197,9 @@ print(f'Matrix created successfully in {output_filepath}')
 
 ![matrix_example](matrix_example.png)
 
-Columns : genomic position 
-Rows : Id patient
-Data : methylation percent
+* Columns : genomic position 
+* Rows : Id patient
+* Data : methylation percent
 
 
 
