@@ -193,6 +193,14 @@ with open(output_filepath, 'w', newline='') as csvfile:
 
 print(f'Matrix created successfully in {output_filepath}')
 ```
+#### Matrix example
+
+![matrix_example](matrix_example.png)
+
+Columns : genomic position 
+Rows : Id patient
+Data : methylation percent
+
 
 
 
