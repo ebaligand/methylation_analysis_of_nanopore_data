@@ -57,7 +57,7 @@ mkdir reference # Create this folder insite "methylation_analysis"
 ## Step 1 - Convert FAST5 data do POD5 data
 
 ```bash
-mkdir ./methylation_analysis/data_pod5
+mkdir ./data_pod5
 
 data_folder=$(find [/path/to/data] -mindepth 1 -maxdepth 1 -type d)
 destination="[./methylation_analysis/data_pod5"
@@ -72,7 +72,7 @@ done
 ## Step 2 - Base Calling with Dorado
 
 ```bash
-mkdir ./methylation_analysis/result_dorado
+mkdir ./result_dorado
 
 data_folder=$(find ./methylation_analysis/data_pod5 -mindepth 1 -maxdepth 1 -type d)
 
@@ -100,7 +100,7 @@ done
 ## Step 4 - Methylation Calling with Modkit
 
 ```bash
-mkdir ./methylation_analysis/result_modkit
+mkdir ./result_modkit
 
 bam_file_sorted=$(find ./methylation_analysis/result_dorado/*_sorted.bam)
 
@@ -125,17 +125,73 @@ done
 ### Retrieving information of interest in a TXT file
 
 ```bash
+mkdir ./matrix
+mkdir ./matrix/bed_modified
+mkdir ./matrix/result_matrix
+
 bed_file=$(find ./methylation_analysis/result_modkit/*_filtered.bed)
 
 for bed in $bed_file; do
     id_patient=$(basename "$bed" _filtered.bed);     
-    awk -v pid="$id_patient" '{print pid, $1":"$2, $11}' "$bed" > "${id_patient}_modified.txt";
+    awk -v pid="$id_patient" '{print pid, $1":"$2, $11}' "$bed" > "./matrix/bed_modified/${id_patient}_modified.txt";
 done
 ```
 ### Creation of the matrix
 
 ```python
+import os
+import csv
 
+# Path to the directory and bed modified 
+bed_modified = './matrix/bed_modified'
+directory = './matrix/result_matrix'
+
+
+# Dictionary to store data
+data = {}
+
+
+# Browse all files in bed_modified
+for filename in os.listdir(bed_modified):
+   if filename.endswith('.txt'):
+       filepath = os.path.join(bed_modified, filename)
+       with open(filepath, 'r') as file:
+           for line in file:
+               parts = line.strip().split()
+               col1, col2, col3 = parts[0], parts[1], parts[2]
+               if col1 not in data:
+                   data[col1] = {}
+               data[col1][col2] = col3
+
+
+# Identify unique values ​​for row and column headers
+unique_col1 = sorted(data.keys())
+unique_col2 = sorted({col2 for col1_data in data.values() for col2 in col1_data.keys()})
+
+
+# Create the matrix with default None values
+matrix = {col1: {col2: None for col2 in unique_col2} for col1 in unique_col1}
+
+
+# Fill the matrix with the appropriate values
+for col1, col2_data in data.items():
+   for col2, col3 in col2_data.items():
+       matrix[col1][col2] = col3
+
+
+# Write the matrix to a CSV file
+output_filepath = os.path.join(directory, 'combined_matrix.csv')
+with open(output_filepath, 'w', newline='') as csvfile:
+   writer = csv.writer(csvfile)
+   # Écrire les en-têtes de colonne
+   writer.writerow([''] + unique_col2)
+   # Écrire les lignes de la matrice
+   for col1 in unique_col1:
+       row = [col1] + [matrix[col1][col2] if matrix[col1][col2] is not None else 'NULL' for col2 in unique_col2]
+       writer.writerow(row)
+
+
+print(f'Matrix created successfully in {output_filepath}')
 ```
 
 
