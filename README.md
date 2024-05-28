@@ -13,7 +13,7 @@ From FAST5 data, this workflow allows :
 * Do a PCA
 
 ## Workflow
-
+![Workflow.](workflow.png)
 
 
 
