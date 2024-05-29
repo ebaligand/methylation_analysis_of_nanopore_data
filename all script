@@ -136,7 +136,7 @@ cd ../result_matrix
 
 # Build methylation percent matrix
 
-python - <<EOF
+python3 - <<EOF
 import os
 import csv
 
@@ -171,44 +171,37 @@ with open(output_filepath, 'w', newline='') as csvfile:
    for col1 in unique_col1:
        row = [col1] + [matrix[col1][col2] if matrix[col1][col2] is not None else 'NULL' for col2 in unique_col2]
        writer.writerow(row)
-EOF
+
 print(f'Matrix created successfully !')
-
+EOF
 mv ./matrix/bed_modified/matrix.csv ./matrix/result_matrix
-
-echo "Matrix created with success!"
 
 # Create CSV annotation file from GTF annotation file
 
-python - <<EOF
+python3 - <<EOF
 import csv
 
 chromosomes_canon = {str(i) for i in range(1, 23)}.union({'X', 'Y', 'MT'})
 
-with open('./reference/Homo_sapiens.GRCh38.112.gtf', 'r') as gtf_file, open(
-  './reference/annotations.csv', 'w', newline='') as csv_file:
-  gtf_reader = csv.reader(gtf_file, delimiter='\t')
-  csv_writer = csv.writer(csv_file)
-
-  for rows in gtf_reader:
-    if len(ligne) >= 9 and ligne[0] in chromosomes_canon:
-      colonnes = [ligne[0], ligne[2], ligne[3], ligne[4]]
-      gene_id = None
-      infos = rows[8].split(';')
-      for info in infos:
-        if info.strip().startswith('gene_id'):
-          gene_id = info.strip().split('"')[1]
-          break
-
-      column.append(gene_id)
-      csv_writer.writerow(column)
+with open('./reference/Homo_sapiens.GRCh38.112.gtf', 'r') as gtf_file, open('./reference/annotations.csv', 'w', newline='') as csv_file:
+    gtf_reader = csv.reader(gtf_file, delimiter='\t')
+    csv_writer = csv.writer(csv_file)
+    for row in gtf_reader:
+        if len(row) >= 9 and row[0] in chromosomes_canon:
+            columns = [row[0], row[2], row[3], row[4]]
+            gene_id = None
+            infos = row[8].split(';')
+            for info in infos:
+                if info.strip().startswith('gene_id'):
+                    gene_id = info.strip().split('"')[1]
+                    break
+            columns.append(gene_id)
+            csv_writer.writerow(columns)
 EOF
 echo "CSV annotation file is created with success!"
 
-# Matrix per gene
 
 
-echo "Process completed successfully!"
 
 
 
