@@ -16,6 +16,9 @@ Python must be downloaded to your working server to complete certain steps.
 
 Depending on the size of the data processed, consider using screen.
 
+The version of the reference genome is as follows : [Genome reference](https://ftp.ensembl.org/pub/release-112/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.alt.fa.gz)
+
+
 ## Workflow
 <img src="workflow.png" alt="workflow" width="800"/>
 
@@ -138,7 +141,7 @@ done
 ```
 ### Creation of the matrix
 
-```python
+```python3
 import os
 import csv
 
@@ -180,7 +183,7 @@ for col1, col2_data in data.items():
 
 
 # Write the matrix to a CSV file
-output_filepath = os.path.join(directory, 'combined_matrix.csv')
+output_filepath = os.path.join(directory, 'matrix.csv')
 with open(output_filepath, 'w', newline='') as csvfile:
    writer = csv.writer(csvfile)
    # Écrire les en-têtes de colonne
@@ -200,6 +203,64 @@ print(f'Matrix created successfully in {output_filepath}')
 * Columns : genomic position 
 * Rows : patient identification
 * Data : methylation percent
+
+### Group by Gene with annotation file
+
+There are many NULL values, it is possible to group the genomic positions by genes with an annotation file ([GTF file](https://ftp.ensembl.org/pub/release-112/gtf/homo_sapiens/Homo_sapiens.GRCh38.112.abinitio.gtf.gz))
+
+#### To create an annotation CSV file
+
+```python3
+import csv
+
+with open('./reference/Homo_sapiens.GRCh38.112.abinitio.gtf', 'r') as gtf_file, open(
+  './reference/annotation.csv', 'w', newline='') as csv_file:
+  gtf_reader = csv.reader(gtf_file, delimiter='\t')
+  csv_writer = csv.writer(csv_file)
+
+  for ligne in gtf_reader:
+    if len(ligne) >= 9:
+      columns = [ligne[0], ligne[2], ligne[3], ligne[4]]
+
+      gene_id = None
+      infos = ligne[8].split(';')
+      for info in infos:
+        if info.strip().startswith('gene_id'):
+          gene_id = info.strip().split('"')[1]
+          break
+
+      colonnes.append(gene_id)
+
+      csv_writer.writerow(columns)
+```
+
+#### To create an matrix per gene
+
+```python3
+import pandas as pd
+import numpy as np
+
+meth_data = pd.read_csv('./matrix/result_matrix/matrix.csv', index_col=0)
+annotations = pd.read_csv('./reference/annotation.csv', header=None,
+                          names=['chrom', 'type', 'start', 'end', 'gene'])
+
+gene_annotations = annotations[annotations['type'] == 'gene']
+
+def find_gene(chrom_pos):
+  chrom, pos = chrom_pos.split(':')
+  pos = int(pos)
+  gene = gene_annotations[(gene_annotations['start'] <= pos) &
+                          (gene_annotations['end'] >= pos)]['gene']
+  return gene.values[0] if not gene.empty else None
+
+meth_data.columns = pd.MultiIndex.from_tuples([(find_gene(col), col) for col in meth_data.columns])
+
+meth_data = meth_data.loc[:, meth_data.columns.get_level_values(0).notna()]
+
+meth_mean_per_gene = meth_data.T.groupby(level=0).mean().T
+
+meth_mean_per_gene.to_csv('gene_matrix.csv')
+```
 
 ## Step 7 - Do a PCA for the data visualization
 
