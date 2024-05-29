@@ -123,9 +123,11 @@ for bed in $bed_file; do
     awk '$4=="m"' "$bed" > "./result_modkit/${id_patient}_filtered.bed"
 done
 ```
+At this step, we have filter bedMethyl files and we can use these files to build different type of matrix and do PCA.
+
 ## Step 6 - Build methylation percent matrix
 
-### Retrieving information of interest in a TXT file
+### Retrieving information of interest in a TXT file from filtered bedMethyl files
 
 ```bash
 mkdir ./matrix
@@ -196,7 +198,7 @@ with open(output_filepath, 'w', newline='') as csvfile:
 
 print(f'Matrix created successfully in {output_filepath}')
 ```
-#### Matrix example
+#### Result matrix example
 
 <img src="matrix_example.png" alt="matrix_example" width="500"/>
 
@@ -206,21 +208,23 @@ print(f'Matrix created successfully in {output_filepath}')
 
 ### Group by Gene with annotation file
 
-There are many NULL values, it is possible to group the genomic positions by genes with an annotation file ([GTF file](https://ftp.ensembl.org/pub/release-112/gtf/homo_sapiens/Homo_sapiens.GRCh38.112.abinitio.gtf.gz))
+There are many NULL values, it is possible to group the genomic positions by genes with an annotation file : ([GTF file](https://ftp.ensembl.org/pub/release-112/gtf/homo_sapiens/Homo_sapiens.GRCh38.112.gtf.gz))
 
 #### To create an annotation CSV file
 
 ```python3
 import csv
 
-with open('./reference/Homo_sapiens.GRCh38.112.abinitio.gtf', 'r') as gtf_file, open(
-  './reference/annotation.csv', 'w', newline='') as csv_file:
+chromosomes_canon = {str(i) for i in range(1, 23)}.union({'X', 'Y', 'MT'})
+
+with open('./reference/Homo_sapiens.GRCh38.112.gtf', 'r') as gtf_file, open(
+  './reference/annotations.csv', 'w', newline='') as csv_file:
   gtf_reader = csv.reader(gtf_file, delimiter='\t')
   csv_writer = csv.writer(csv_file)
 
-  for ligne in gtf_reader:
-    if len(ligne) >= 9:
-      columns = [ligne[0], ligne[2], ligne[3], ligne[4]]
+  for rows in gtf_reader:
+    if len(rows) >= 9 and rows[0] in chromosomes_canon:
+      columns = [rows[0], rows[2], rows[3], rows[4]]
 
       gene_id = None
       infos = ligne[8].split(';')
@@ -229,7 +233,7 @@ with open('./reference/Homo_sapiens.GRCh38.112.abinitio.gtf', 'r') as gtf_file, 
           gene_id = info.strip().split('"')[1]
           break
 
-      colonnes.append(gene_id)
+      columns.append(gene_id)
 
       csv_writer.writerow(columns)
 ```
@@ -241,7 +245,7 @@ import pandas as pd
 import numpy as np
 
 meth_data = pd.read_csv('./matrix/result_matrix/matrix.csv', index_col=0)
-annotations = pd.read_csv('./reference/annotation.csv', header=None,
+annotations = pd.read_csv('./reference/annotations.csv', header=None,
                           names=['chrom', 'type', 'start', 'end', 'gene'])
 
 gene_annotations = annotations[annotations['type'] == 'gene']
