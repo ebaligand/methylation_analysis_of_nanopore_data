@@ -136,6 +136,7 @@ cd ../result_matrix
 
 # Build methylation percent matrix
 
+python - <<EOF
 import os
 import csv
 
@@ -170,7 +171,7 @@ with open(output_filepath, 'w', newline='') as csvfile:
    for col1 in unique_col1:
        row = [col1] + [matrix[col1][col2] if matrix[col1][col2] is not None else 'NULL' for col2 in unique_col2]
        writer.writerow(row)
-
+EOF
 print(f'Matrix created successfully !')
 
 mv ./matrix/bed_modified/matrix.csv ./matrix/result_matrix
@@ -179,6 +180,7 @@ echo "Matrix created with success!"
 
 # Create CSV annotation file from GTF annotation file
 
+python - <<EOF
 import csv
 
 chromosomes_canon = {str(i) for i in range(1, 23)}.union({'X', 'Y', 'MT'})
@@ -200,7 +202,7 @@ with open('./reference/Homo_sapiens.GRCh38.112.gtf', 'r') as gtf_file, open(
 
       column.append(gene_id)
       csv_writer.writerow(column)
-
+EOF
 echo "CSV annotation file is created with success!"
 
 # Matrix per gene
