@@ -91,7 +91,7 @@ bam_file_sorted=$(find ./result_dorado/*_sorted.bam)
 for bam in $bam_file_sorted; do 
     id_patient=$(basename "$bam" _sorted.bam)
     
-    singularity exec --nv ./image_singularity/modkit.sif modkit pileup "$bam" ./result_modkit/"$id_patient.bed" --ref ./reference/*.fasta --combine-strands --cpg
+    singularity exec --nv ./image_singularity/modkit.sif modkit pileup "$bam" ./result_modkit/"$id_patient.bed" --ref ./reference/*.fa --combine-strands --cpg
 done
 echo "Methylation Calling successful"
 
@@ -102,7 +102,7 @@ for bed in $bed_file; do
     id_patient=$(basename "$bed" .bed)
     awk '$4=="m"' "$bed" > "./result_modkit/${id_patient}_filtered.bed"
 done
-
+echo "Filtering is over"
 echo "Process completed successfully!"
 
 
