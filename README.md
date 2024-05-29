@@ -1,4 +1,4 @@
-# Methylation analysis of nanopore data
+# Methylation analysis of Nanopore data
 
 This document aims to present the workflow for conducting methylation analysis of nanopore data.
 
@@ -60,13 +60,13 @@ mkdir reference # Create this folder insite "methylation_analysis"
 mkdir ./data_pod5
 
 data_folder=$(find [/path/to/data] -mindepth 1 -maxdepth 1 -type d)
-destination="[./methylation_analysis/data_pod5"
+destination="./data_pod5"
 
 for folder in $data_folder; do
     id_patient=$(basename "$folder")
     mkdir -p "$destination/$id_patient"
     
-    singularity exec --nv ./methylation_analysis/image_singularity/fast5_to_pod5.sif pod5 convert fast5 "$folder"/*.fast5 --output "$destination/$id_patient" --one-to-one "$folder"
+    singularity exec --nv ./image_singularity/fast5_to_pod5.sif pod5 convert fast5 "$folder"/*.fast5 --output "$destination/$id_patient" --one-to-one "$folder"
 done
 ```
 ## Step 2 - Base Calling with Dorado
@@ -74,26 +74,26 @@ done
 ```bash
 mkdir ./result_dorado
 
-data_folder=$(find ./methylation_analysis/data_pod5 -mindepth 1 -maxdepth 1 -type d)
+data_folder=$(find ./data_pod5 -mindepth 1 -maxdepth 1 -type d)
 
 for folder in $data_folder; do
     id_patient=$(basename "$folder")
 
-    singularity exec --nv ./methylation_analysis/image_singularity/dorado.sif dorado basecaller --reference ./methylation_analysis/reference/*.fasta /models/dna_r10.4.1_e8.2_400bps_hac@v4.1.0 "$folder" --modified-bases-models /models/dna_r10.4.1_e8.2_400bps_hac@v4.1.0_5mCG_5hmCG@v2 > ./methylation_analysis/result_dorado/"$id_patient.bam"
+    singularity exec --nv ./image_singularity/dorado.sif dorado basecaller --reference ./reference/*.fasta /models/dna_r10.4.1_e8.2_400bps_hac@v4.1.0 "$folder" --modified-bases-models /models/dna_r10.4.1_e8.2_400bps_hac@v4.1.0_5mCG_5hmCG@v2 > ./result_dorado/"$id_patient.bam"
 done
 ```
 ## Step 3 - Indexing and sorted BAM files
 
 ```bash
-bam_file=$(find ./methylation_analysis/result_dorado/*.bam)
+bam_file=$(find ./result_dorado/*.bam)
 
 for bam in $bam_file; do
     id_patient=$(basename "$bam" .bam)
-    sorted_bam="./methylation_analysis/result_dorado/${id_patient}_sorted.bam"
+    sorted_bam="./result_dorado/${id_patient}_sorted.bam"
     
-    singularity exec --nv ./methylation_analysis/image_singularity/samtools.sif samtools sort -o "$sorted_bam" "$bam"
+    singularity exec --nv ./image_singularity/samtools.sif samtools sort -o "$sorted_bam" "$bam"
     
-    singularity exec --nv /methylation_analysis/image_singularity/samtools.sif samtools index "$sorted_bam"
+    singularity exec --nv ./image_singularity/samtools.sif samtools index "$sorted_bam"
 done
 ```
 
@@ -102,22 +102,22 @@ done
 ```bash
 mkdir ./result_modkit
 
-bam_file_sorted=$(find ./methylation_analysis/result_dorado/*_sorted.bam)
+bam_file_sorted=$(find ./result_dorado/*_sorted.bam)
 
 for bam in $bam_file_sorted; do 
     id_patient=$(basename "$bam" _sorted.bam)
     
-    singularity exec --nv ./methylation_analysis/image_singularity/modkit.sif modkit pileup "$bam" ./methylation_analysis/result_modkit/"$id_patient.bed" --ref ./methylation_analysis/reference/*.fasta --combine-strands --cpg
+    singularity exec --nv ./image_singularity/modkit.sif modkit pileup "$bam" ./result_modkit/"$id_patient.bed" --ref ./reference/*.fasta --combine-strands --cpg
 done
 ```
 ## Step 5 - Filtering BED files
 
 ```bash
-bed_file=$(find ./methylation_analysis/result_modkit/*.bed)
+bed_file=$(find ./result_modkit/*.bed)
 
 for bed in $bed_file; do
     id_patient=$(basename "$bed" .bed)
-    awk '$4=="m"' "$bed" > "./methylation_analysis/result_modkit/${id_patient}_filtered.bed"
+    awk '$4=="m"' "$bed" > "./result_modkit/${id_patient}_filtered.bed"
 done
 ```
 ## Step 6 - Build methylation percent matrix
@@ -129,7 +129,7 @@ mkdir ./matrix
 mkdir ./matrix/bed_modified
 mkdir ./matrix/result_matrix
 
-bed_file=$(find ./methylation_analysis/result_modkit/*_filtered.bed)
+bed_file=$(find ./result_modkit/*_filtered.bed)
 
 for bed in $bed_file; do
     id_patient=$(basename "$bed" _filtered.bed);     
@@ -201,7 +201,7 @@ print(f'Matrix created successfully in {output_filepath}')
 * Rows : patient identification
 * Data : methylation percent
 
-
+## Step 7 - Do a PCA for the data visualization
 
 
 
