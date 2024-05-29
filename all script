@@ -25,11 +25,10 @@ singularity build samtools.sif docker://biocontainers/samtools:v1.9-4-deb_cv1 # 
 
 cd ..
 
-# Create the genomic reference file
+# Upload the genomic reference file
 mkdir -p reference
 cd reference
 
-# Download the genome reference
 GENOME_URL="https://ftp.ensembl.org/pub/release-112/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.alt.fa.gz"
 wget -O Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz "$GENOME_URL"
 
@@ -41,7 +40,22 @@ else
 fi
 
 gunzip Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz
-echo "The human genome has been downloaded and unzipped into /methylation_analysis/reference."
+echo "The human genome has been downloaded and unzipped into "/methylation_analysis/reference"."
+
+# Upload the genomic annotation file
+ANNOTATION_URL="https://ftp.ensembl.org/pub/release-112/gtf/homo_sapiens/Homo_sapiens.GRCh38.112.gtf.gz"
+wget -O Homo_sapiens.GRCh38.112.gtf.gz "$ANNOTATION_URL"
+
+if [ $? -eq 0 ]; then
+    echo "Download successful."
+else
+    echo "Error while downloading."
+    exit 1
+fi
+
+gunzip Homo_sapiens.GRCh38.112.gtf.gz
+echo "The human genome annotation has been downloaded and unzipped into "/methylation_analysis/reference"."
+
 cd ..
 
 # Convert FAST5 to POD5
@@ -103,7 +117,97 @@ for bed in $bed_file; do
     awk '$4=="m"' "$bed" > "./result_modkit/${id_patient}_filtered.bed"
 done
 echo "Filtering is over"
+
+# Create modified txt from bed file
+
+mkdir ./matrix
+mkdir ./matrix/bed_modified
+mkdir ./matrix/result_matrix
+cd ./matrix/bed_modified
+
+bed_file=$(find ./result_modkit/*_filtered.bed)
+
+for bed in $bed_file; do
+    id_patient=$(basename "$bed" _filtered.bed);     
+    awk -v pid="$id_patient" '{print pid, $1":"$2, $11}' "$bed" > "${id_patient}_modified.txt";
+done
+
+cd ../result_matrix
+
+# Build methylation percent matrix
+
+import os
+import csv
+
+directory = './matrix/bed_modified'
+
+data = {}
+
+for filename in os.listdir(directory):
+   if filename.endswith('.txt'):
+       filepath = os.path.join(directory, filename)
+       with open(filepath, 'r') as file:
+           for line in file:
+               parts = line.strip().split()
+               col1, col2, col3 = parts[0], parts[1], parts[2]
+               if col1 not in data:
+                   data[col1] = {}
+               data[col1][col2] = col3
+
+unique_col1 = sorted(data.keys())
+unique_col2 = sorted({col2 for col1_data in data.values() for col2 in col1_data.keys()})
+
+matrix = {col1: {col2: None for col2 in unique_col2} for col1 in unique_col1}
+
+for col1, col2_data in data.items():
+   for col2, col3 in col2_data.items():
+       matrix[col1][col2] = col3
+
+output_filepath = os.path.join(directory, 'matrix.csv')
+with open(output_filepath, 'w', newline='') as csvfile:
+   writer = csv.writer(csvfile)
+   writer.writerow([''] + unique_col2)
+   for col1 in unique_col1:
+       row = [col1] + [matrix[col1][col2] if matrix[col1][col2] is not None else 'NULL' for col2 in unique_col2]
+       writer.writerow(row)
+
+print(f'Matrix created successfully !')
+
+mv ./matrix/bed_modified/matrix.csv ./matrix/result_matrix
+
+echo "Matrix created with success!"
+
+# Create CSV annotation file from GTF annotation file
+
+import csv
+
+chromosomes_canon = {str(i) for i in range(1, 23)}.union({'X', 'Y', 'MT'})
+
+with open('./reference/Homo_sapiens.GRCh38.112.gtf', 'r') as gtf_file, open(
+  './reference/annotations.csv', 'w', newline='') as csv_file:
+  gtf_reader = csv.reader(gtf_file, delimiter='\t')
+  csv_writer = csv.writer(csv_file)
+
+  for rows in gtf_reader:
+    if len(ligne) >= 9 and ligne[0] in chromosomes_canon:
+      colonnes = [ligne[0], ligne[2], ligne[3], ligne[4]]
+      gene_id = None
+      infos = rows[8].split(';')
+      for info in infos:
+        if info.strip().startswith('gene_id'):
+          gene_id = info.strip().split('"')[1]
+          break
+
+      column.append(gene_id)
+      csv_writer.writerow(column)
+
+echo "CSV annotation file is created with success!"
+
+# Matrix per gene
+
+
 echo "Process completed successfully!"
+
 
 
 
