@@ -123,16 +123,17 @@ echo "Filtering is over"
 mkdir ./matrix
 mkdir ./matrix/bed_modified
 mkdir ./matrix/result_matrix
-cd ./matrix/bed_modified
 
 bed_file=$(find ./result_modkit/*_filtered.bed)
 
 for bed in $bed_file; do
-    id_patient=$(basename "$bed" _filtered.bed);     
-    awk -v pid="$id_patient" '{print pid, $1":"$2, $11}' "$bed" > "${id_patient}_modified.txt";
+    id_patient=$(basename "$bed" _filtered.bed)
+    awk -v pid="$id_patient" '
+        $1 ~ /^chr([1-9]|1[0-9]|2[0-2]|[XYM])$/ {
+            print pid, $1":"$2, $11
+        }
+    ' "$bed" > "./matrix/bed_modified/${id_patient}_modified.txt"
 done
-
-cd ../result_matrix
 
 # Build methylation percent matrix
 
