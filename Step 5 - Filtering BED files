@@ -1,0 +1,13 @@
+```bash
+# Find all BED files in the result_modkit directory
+bed_file=$(find ./result_modkit/*.bed)
+
+# Loop through each BED file found
+for bed in $bed_file; do
+    # Get the basename of the BED file, which is the patient ID
+    id_patient=$(basename "$bed" .bed)
+    
+    # Use awk to filter rows where the fourth column is "m" and save to a new filtered BED file
+    awk '$4=="m"' "$bed" > "./result_modkit/${id_patient}_filtered.bed"
+done
+```
