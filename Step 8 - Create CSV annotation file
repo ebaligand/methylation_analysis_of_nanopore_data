@@ -1,0 +1,39 @@
+```python3
+# Import the csv module for CSV file handling
+import csv
+
+# Set of canonical chromosome identifiers
+chromosomes_canon = {str(i) for i in range(1, 23)}.union({'X', 'Y', 'MT'})
+
+# Open the GTF file for reading and the CSV file for writing
+with open('./reference/Homo_sapiens.GRCh38.112.gtf', 'r') as gtf_file, open(
+  './reference/annotations.csv', 'w', newline='') as csv_file:
+  
+  # Create a CSV reader object for reading the GTF file, specifying the tab delimiter
+  gtf_reader = csv.reader(gtf_file, delimiter='\t')
+  
+  # Create a CSV writer object for writing to the CSV file
+  csv_writer = csv.writer(csv_file)
+
+  # Iterate through each row in the GTF file
+  for rows in gtf_reader:
+    # Check if the row has at least 9 columns and if the chromosome identifier is in the set of canonical chromosomes
+    if len(rows) >= 9 and rows[0] in chromosomes_canon:
+      
+      # Extract relevant information (chromosome, feature type, start position, end position) from the row
+      columns = [rows[0], rows[2], rows[3], rows[4]]
+
+      # Extract the gene ID from the last column of the row
+      gene_id = None
+      infos = rows[8].split(';')
+      for info in infos:
+        if info.strip().startswith('gene_id'):
+          gene_id = info.strip().split('"')[1]
+          break
+
+      # Append the gene ID to the list of columns
+      columns.append(gene_id)
+
+      # Write the extracted information to the CSV file
+      csv_writer.writerow(columns)
+```
