@@ -1,0 +1,34 @@
+```python3
+import pandas as pd
+
+# Define the segment size in kilobases
+segment_size_kb = 20  # Replace with the desired size
+
+# Read methylation data from the CSV file
+meth_data = pd.read_csv('./matrix/result_matrix/matrix.csv', index_col=0)
+
+# Read annotations from the CSV file
+annotations = pd.read_csv('./reference/annotations.csv', header=None,
+                          names=['chrom', 'type', 'start', 'end', 'gene'])
+
+# Define a function to get the segment from the chromosomal position
+def get_segment(chrom_pos, segment_size_kb=segment_size_kb):
+    chrom, pos = chrom_pos.split(':')
+    pos = int(pos)
+    segment_start = (pos // segment_size_kb) * segment_size_kb
+    segment_end = segment_start + segment_size_kb
+    segment_name = f"{chrom}:{segment_start}-{segment_end}"
+    return segment_name
+
+# Rename the columns of methylation data using segments
+meth_data.columns = pd.MultiIndex.from_tuples([(get_segment(col), col) for col in meth_data.columns])
+
+# Keep only the columns where the segment name is not null
+meth_data = meth_data.loc[:, meth_data.columns.get_level_values(0).notna()]
+
+# Calculate the mean methylation per segment
+meth_mean_per_segment = meth_data.T.groupby(level=0).mean().T
+
+# Write the mean methylation data per segment to a new CSV file
+meth_mean_per_segment.to_csv(f'./matrix/result_matrix/{segment_size_kb}Kb_matrix.csv')
+```
