@@ -1,0 +1,41 @@
+```python3
+# Import the pandas library as pd for data manipulation
+import pandas as pd
+# Import the numpy library as np for numerical computations
+import numpy as np
+
+# Read the methylation data from the CSV file into a pandas DataFrame
+meth_data = pd.read_csv('./matrix/result_matrix/matrix.csv', index_col=0)
+
+# Read the annotations data from the CSV file into a pandas DataFrame
+annotations = pd.read_csv('./reference/annotations.csv', header=None,
+                          names=['chrom', 'type', 'start', 'end', 'gene'])
+
+# Extract only the rows corresponding to genes from the annotations DataFrame
+gene_annotations = annotations[annotations['type'] == 'gene']
+
+# Define a function to find the gene associated with a given chromosome position
+def find_gene(chrom_pos):
+  # Split the chromosome position string into chromosome and position
+  chrom, pos = chrom_pos.split(':')
+  # Convert the position to an integer
+  pos = int(pos)
+  # Find the gene that overlaps with the given position
+  gene = gene_annotations[(gene_annotations['start'] <= pos) &
+                          (gene_annotations['end'] >= pos)]['gene']
+  # Return the gene name if found, otherwise return None
+  return gene.values[0] if not gene.empty else None
+
+# Rename the columns of the methylation data DataFrame using gene names
+meth_data.columns = pd.MultiIndex.from_tuples([(find_gene(col), col) for col in meth_data.columns])
+
+# Keep only the columns where the gene name is not null
+meth_data = meth_data.loc[:, meth_data.columns.get_level_values(0).notna()]
+
+# Compute the mean methylation level per gene
+meth_mean_per_gene = meth_data.T.groupby(level=0).mean().T
+
+# Write the gene-wise mean methylation data to a new CSV file
+meth_mean_per_gene.to_csv('gene_matrix.csv')
+
+```
