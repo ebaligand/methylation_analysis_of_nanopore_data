@@ -2,7 +2,7 @@
 This document aims to present the workflow for conducting methylation analysis of nanopore data.
 
 ## Features
-From FAST5 data, this workflow allows : 
+From FAST5 data, this workflow allows: 
 
 * Convert FAST5 data to POD5 data 
 * Base Calling with [Dorado](https://github.com/nanoporetech/dorado?tab=readme-ov-file#features)
@@ -18,10 +18,10 @@ So, Python must be downloaded to your working server to complete certain steps. 
 Depending on the size of the data processed, consider using [screen](https://doc.ubuntu-fr.org/screen).
 
 ## Reference
-The version of the reference genome is as follows : [Genome reference](https://ftp.ensembl.org/pub/release-112/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.alt.fa.gz)
-The version of the annotation genome file is as follows : [Annotation genome file](https://ftp.ensembl.org/pub/release-112/gtf/homo_sapiens/Homo_sapiens.GRCh38.112.gtf.gz)
+The version of the reference genome is as follows: [Genome reference](https://ftp.ensembl.org/pub/release-112/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.alt.fa.gz).
+The version of the annotation genome file is as follows: [Annotation genome file](https://ftp.ensembl.org/pub/release-112/gtf/homo_sapiens/Homo_sapiens.GRCh38.112.gtf.gz).
 
-Script for upload the references in your workspace : 
+Script for upload the references in your workspace: 
 ```bash
 # The genomic reference file
 GENOME_URL="https://ftp.ensembl.org/pub/release-112/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.alt.fa.gz"
@@ -49,7 +49,7 @@ singularity build samtools.sif docker://biocontainers/samtools:v1.9-4-deb_cv1 # 
 ```
 
 ## Start the analysis
-Now you can start your analyses :
+Now you can start your analyses:
 
 * Step files: individual steps of the workflow
 * The all script file: all analyzes to run
