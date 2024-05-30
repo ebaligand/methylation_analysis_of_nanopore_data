@@ -1,9 +1,7 @@
 # Methylation analysis of Nanopore data
-
 This document aims to present the workflow for conducting methylation analysis of nanopore data.
 
 ## Features
-
 From FAST5 data, this workflow allows : 
 
 * Convert FAST5 data to POD5 data 
@@ -12,34 +10,36 @@ From FAST5 data, this workflow allows :
 * Build methylation percent matrix
 * Do a PCA for the data visualization
 
-Python must be downloaded to your working server to complete certain steps.
+## Languages
+Le script have been developed in bash and python languages.
+So, Python must be downloaded to your working server to complete certain steps. You also need [numpy](https://numpy.org) and [pandas](https://numpy.org) packages.
 
-Depending on the size of the data processed, consider using screen.
+## Tips 
+Depending on the size of the data processed, consider using [screen](https://doc.ubuntu-fr.org/screen).
 
+## Reference
 The version of the reference genome is as follows : [Genome reference](https://ftp.ensembl.org/pub/release-112/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.alt.fa.gz)
+The version of the annotation genome file is as follows : [Annotation genome file](https://ftp.ensembl.org/pub/release-112/gtf/homo_sapiens/Homo_sapiens.GRCh38.112.gtf.gz)
 
+Script for upload the references in your workspace : 
+```bash
+# The genomic reference file
+GENOME_URL="https://ftp.ensembl.org/pub/release-112/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.alt.fa.gz"
+wget -O Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz "$GENOME_URL"
+gunzip Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz
+
+
+# The genomic annotation file
+ANNOTATION_URL="https://ftp.ensembl.org/pub/release-112/gtf/homo_sapiens/Homo_sapiens.GRCh38.112.gtf.gz"
+wget -O Homo_sapiens.GRCh38.112.gtf.gz "$ANNOTATION_URL"
+gunzip Homo_sapiens.GRCh38.112.gtf.gz
+```
 
 ## Workflow
 <img src="workflow.png" alt="workflow" width="800"/>
 
-## Set up 
-
-To begin, we need to create the work space in Linux environnement. 
-
-Where you work, create : 
-
-* Folder "methylation_analysis" :
-  
-```bash
-mkdir methylation_analysis
-```
-* Folder "image_singularity" in the last folder created : 
-
-```bash
-mkdir image_singularity
-```
-
-* Inside "image_singularity" create the images for tools with [Docker hub](https://hub.docker.com):
+## Singularity images 
+To begin, your need to build the images for tools with [Docker hub](https://hub.docker.com):
 
 ```bash
 singularity build fast5_to_pod5.sif docker://chrisamiller/pod5-tools:0.2.4 # Convert FAST5 to POD5
@@ -48,82 +48,13 @@ singularity build modkit.sif docker://ontresearch/modkit:mr398_shab20df82474168d
 singularity build samtools.sif docker://biocontainers/samtools:v1.9-4-deb_cv1 # Samtools
 ```
 
-* Copy your data in FAST5 format inside the folder "methylation_analysis"
+## Start the analysis
+Now you can start your analyses :
 
-* Download a reference genome in "reference" folder :
+* Step files: individual steps of the workflow
+* The all script file: all analyzes to run
 
-```bash
-mkdir reference # Create this folder insite "methylation_analysis"
-```
-
-
-## Step 1 - Convert FAST5 data do POD5 data
-
-```bash
-mkdir ./data_pod5
-
-data_folder=$(find [/path/to/data] -mindepth 1 -maxdepth 1 -type d)
-destination="./data_pod5"
-
-for folder in $data_folder; do
-    id_patient=$(basename "$folder")
-    mkdir -p "$destination/$id_patient"
-    
-    singularity exec --nv ./image_singularity/fast5_to_pod5.sif pod5 convert fast5 "$folder"/*.fast5 --output "$destination/$id_patient" --one-to-one "$folder"
-done
-```
-## Step 2 - Base Calling with Dorado
-
-```bash
-mkdir ./result_dorado
-
-data_folder=$(find ./data_pod5 -mindepth 1 -maxdepth 1 -type d)
-
-for folder in $data_folder; do
-    id_patient=$(basename "$folder")
-
-    singularity exec --nv ./image_singularity/dorado.sif dorado basecaller --reference ./reference/*.fasta /models/dna_r10.4.1_e8.2_400bps_hac@v4.1.0 "$folder" --modified-bases-models /models/dna_r10.4.1_e8.2_400bps_hac@v4.1.0_5mCG_5hmCG@v2 > ./result_dorado/"$id_patient.bam"
-done
-```
-## Step 3 - Indexing and sorted BAM files
-
-```bash
-bam_file=$(find ./result_dorado/*.bam)
-
-for bam in $bam_file; do
-    id_patient=$(basename "$bam" .bam)
-    sorted_bam="./result_dorado/${id_patient}_sorted.bam"
-    
-    singularity exec --nv ./image_singularity/samtools.sif samtools sort -o "$sorted_bam" "$bam"
-    
-    singularity exec --nv ./image_singularity/samtools.sif samtools index "$sorted_bam"
-done
-```
-
-## Step 4 - Methylation Calling with Modkit
-
-```bash
-mkdir ./result_modkit
-
-bam_file_sorted=$(find ./result_dorado/*_sorted.bam)
-
-for bam in $bam_file_sorted; do 
-    id_patient=$(basename "$bam" _sorted.bam)
-    
-    singularity exec --nv ./image_singularity/modkit.sif modkit pileup "$bam" ./result_modkit/"$id_patient.bed" --ref ./reference/*.fasta --combine-strands --cpg
-done
-```
-## Step 5 - Filtering BED files
-
-```bash
-bed_file=$(find ./result_modkit/*.bed)
-
-for bed in $bed_file; do
-    id_patient=$(basename "$bed" .bed)
-    awk '$4=="m"' "$bed" > "./result_modkit/${id_patient}_filtered.bed"
-done
-```
-At this step, we have filter bedMethyl files and we can use these files to build different type of matrix and do PCA.
+  
 
 ## Step 6 - Build methylation percent matrix
 
