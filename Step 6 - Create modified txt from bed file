@@ -1,0 +1,11 @@
+# Find all filtered BED files in the result_modkit directory
+bed_file=$(find ./result_modkit/*_filtered.bed)
+
+# Loop through each filtered BED file found
+for bed in $bed_file; do
+    # Get the basename of the filtered BED file, which is the patient ID
+    id_patient=$(basename "$bed" _filtered.bed)
+    
+    # Use awk to print the patient ID, chromosome and position, and the 11th column to a new text file
+    awk -v pid="$id_patient" '{print pid, $1":"$2, $11}' "$bed" > "${id_patient}_modified.txt"
+done
