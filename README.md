@@ -79,12 +79,12 @@ A nano page opens and you can write into.
 ```bash
 nano copy_fast5.sh
 ```
-A nano page opens and you can copy the following bash script inside : 
+A nano page opens and you can copy the following bash script inside: 
 ```bash
 todo
 ```
 
-- Step 3 : start the following script in the screen (because it can be long) : 
+- Step 3 : start the last script in the screen (because it can be long) with this code: 
 ```bash
 bash copy_fast5.sh
 ```
