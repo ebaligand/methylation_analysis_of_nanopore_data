@@ -89,7 +89,7 @@ Import or create this file in the server of analysis.
 ## Start the analysis
 Now you can start your analyses:
 
-* Step files: individual steps of the workflow.
+* Step files: individual steps of the workflow.  
 Note : Remember to update the paths!
 
 * The all script file: all analyzes starting from fast5 raw files up to the basic matrix.  
