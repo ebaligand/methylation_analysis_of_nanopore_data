@@ -78,7 +78,7 @@ id_patient1  /path/toward/fast5/files/of/the/patient/with/id/is/id_patient1
 id_patient2  /path/toward/fast5/files/of/the/patient/with/id/is/id_patient2
 id_patient3  /path/toward/fast5/files/of/the/patient/with/id/is/id_patient3
 ```
-/!\ Warning : pay attention of the slashes. This '/' is accepted, not that '\'.
+Warning : pay attention of the slashes. This '/' is accepted, not that '\'.
 
 Import or create this file in the server of analysis.
 
@@ -90,10 +90,10 @@ Import or create this file in the server of analysis.
 Now you can start your analyses:
 
 * Step files: individual steps of the workflow.
-/!\ Remember to update the paths!
+Note : Remember to update the paths!
 
 * The all script file: all analyzes starting from fast5 raw files up to the basic matrix.
-/!\ The script with all analysis allow to download all singularity images and references files.
+Note : The script with all analysis allow to download all singularity images and references files.
 
 
 
