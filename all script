@@ -193,31 +193,11 @@ with open(output_filepath, 'w', newline='') as csvfile:
 # Print a message indicating successful creation of the matrix
 print(f'Matrix created successfully !')
 EOF
-mv ./matrix/bed_modified/matrix.csv ./matrix/result_matrix
 
-# Create CSV annotation file from GTF annotation file
+echo "All analysis are over ! You can find your matrix at the following path : ./matrix/result_matrix/matrix.csv. Now, it is possible to start other matrix more specific to make PCA analysis."
 
-python3 - <<EOF
-import csv
 
-chromosomes_canon = {str(i) for i in range(1, 23)}.union({'X', 'Y', 'MT'})
 
-with open('./reference/Homo_sapiens.GRCh38.112.gtf', 'r') as gtf_file, open('./reference/annotations.csv', 'w', newline='') as csv_file:
-    gtf_reader = csv.reader(gtf_file, delimiter='\t')
-    csv_writer = csv.writer(csv_file)
-    for row in gtf_reader:
-        if len(row) >= 9 and row[0] in chromosomes_canon:
-            columns = [row[0], row[2], row[3], row[4]]
-            gene_id = None
-            infos = row[8].split(';')
-            for info in infos:
-                if info.strip().startswith('gene_id'):
-                    gene_id = info.strip().split('"')[1]
-                    break
-            columns.append(gene_id)
-            csv_writer.writerow(columns)
-EOF
-echo "CSV annotation file is created with success!"
 
 
 
