@@ -92,8 +92,7 @@ Now you can start your analyses:
 * Step files: individual steps of the workflow.
 Note : Remember to update the paths!
 
-* The all script file: all analyzes starting from fast5 raw files up to the basic matrix.
-Note : The script with all analysis allow to download all singularity images and references files.
+* The all script file: all analyzes starting from fast5 raw files up to the basic matrix.  Note : The script with all analysis allow to download all singularity images and references files.
 
 
 
