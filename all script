@@ -43,18 +43,18 @@ gunzip Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz
 echo "The human genome has been downloaded and unzipped into "/methylation_analysis/reference"."
 
 # Upload the genomic annotation file
-ANNOTATION_URL="https://ftp.ensembl.org/pub/release-112/gtf/homo_sapiens/Homo_sapiens.GRCh38.112.gtf.gz"
-wget -O Homo_sapiens.GRCh38.112.gtf.gz "$ANNOTATION_URL"
+# ANNOTATION_URL="https://ftp.ensembl.org/pub/release-112/gtf/homo_sapiens/Homo_sapiens.GRCh38.112.gtf.gz"
+# wget -O Homo_sapiens.GRCh38.112.gtf.gz "$ANNOTATION_URL"
 
-if [ $? -eq 0 ]; then
-    echo "Download successful."
-else
-    echo "Error while downloading."
-    exit 1
-fi
+# if [ $? -eq 0 ]; then
+    # echo "Download successful."
+# else
+    # echo "Error while downloading."
+    # exit 1
+# fi
 
-gunzip Homo_sapiens.GRCh38.112.gtf.gz
-echo "The human genome annotation has been downloaded and unzipped into "/methylation_analysis/reference"."
+# gunzip Homo_sapiens.GRCh38.112.gtf.gz
+# echo "The human genome annotation has been downloaded and unzipped into "/methylation_analysis/reference"."
 
 cd ..
 
