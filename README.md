@@ -77,7 +77,7 @@ A nano page opens and you can write into.
 ```bash
 nano copy_fast5.sh
 ```
-A nano page opens and you can copy the flowwing bash script inside : 
+A nano page opens and you can copy the following bash script inside : 
 ```bash
 todo
 ```
