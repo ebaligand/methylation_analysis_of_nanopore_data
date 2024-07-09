@@ -67,7 +67,7 @@ id_patient3  /path/toward/fast5/files/of/the/patient/with/id/is/id_patient3
 id_patient4  /path/toward/fast5/files/of/the/patient/with/id/is/id_patient4
 id_patient5  /path/toward/fast5/files/of/the/patient/with/id/is/id_patient5
 ```
-/!\ Warning : pay attention to the meaning of the slashes. This '/' is accepted, not that '\'.
+/!\ Warning : pay attention of the slashes. This '/' is accepted, not that '\'.
 
 You can import this txt file into the server or create it directly in the server with the code below:
 ```bash
