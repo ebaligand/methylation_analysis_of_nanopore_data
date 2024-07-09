@@ -66,6 +66,13 @@ destination="./data_pod5"
 
 for folder in $data_folder; do
     id_patient=$(basename "$folder")
+    pod5_files=$(find "$folder" -name '*.pod5')
+
+    if [ -n "$pod5_files" ]; then
+        echo "Skipping conversion for $folder as POD5 files already exist."
+        continue
+    fi
+
     mkdir -p "$destination/$id_patient"
     
     singularity exec --nv ./image_singularity/fast5_to_pod5.sif pod5 convert fast5 "$folder"/*.fast5 --output "$destination/$id_patient" --one-to-one "$folder"
@@ -109,31 +116,35 @@ for bam in $bam_file_sorted; do
 done
 echo "Methylation Calling successful"
 
-# Filtering BED files
-bed_file=$(find ./result_modkit/*.bed)
+# Ask the user if they want to create the matrix
+read -p "Do you want to create the matrix? (Y/N): " create_matrix
 
-for bed in $bed_file; do
-    id_patient=$(basename "$bed" .bed)
-    awk '$4=="m"' "$bed" > "./result_modkit/${id_patient}_filtered.bed"
-done
-echo "Filtering is over"
+if [[ "$create_matrix" =~ ^[Yy]$ ]]; then
+    # Filtering BED files
+    bed_file=$(find ./result_modkit/*.bed)
 
-# Create modified txt from bed file
+    for bed in $bed_file; do
+        id_patient=$(basename "$bed" .bed)
+        awk '$4=="m"' "$bed" > "./result_modkit/${id_patient}_filtered.bed"
+    done
+    echo "Filtering is over"
 
-mkdir ./matrix
-mkdir ./matrix/bed_modified
-mkdir ./matrix/result_matrix
+    # Create modified txt from bed file
 
-bed_file=$(find ./result_modkit/*_filtered.bed)
+    mkdir ./matrix
+    mkdir ./matrix/bed_modified
+    mkdir ./matrix/result_matrix
 
-for bed in $bed_file; do
-    id_patient=$(basename "$bed" _filtered.bed)
-    awk -v pid="$id_patient" '
-        $1 ~ /^chr([1-9]|1[0-9]|2[0-2]|[XYM])$/ {
-            print pid, $1":"$2, $11
-        }
-    ' "$bed" > "./matrix/bed_modified/${id_patient}_modified.txt"
-done
+    bed_file=$(find ./result_modkit/*_filtered.bed)
+
+    for bed in $bed_file; do
+        id_patient=$(basename "$bed" _filtered.bed)
+        awk -v pid="$id_patient" '
+            $1 ~ /^chr([1-9]|1[0-9]|2[0-2]|[XYM])$/ {
+                print pid, $1":"$2, $11
+            }
+        ' "$bed" > "./matrix/bed_modified/${id_patient}_modified.txt"
+    done
 
 # Build methylation percent matrix
 
@@ -194,12 +205,10 @@ with open(output_filepath, 'w', newline='') as csvfile:
 print(f'Matrix created successfully !')
 EOF
 
-echo "All analysis are over ! You can find your matrix at the following path : ./matrix/result_matrix/matrix.csv. Now, it is possible to start other matrix more specific to make PCA analysis."
-
-
-
-
-
+    echo "All analysis are over ! You can find your matrix at the following path : ./matrix/result_matrix/matrix.csv. Now, it is possible to start other matrix more specific to make PCA analysis."
+else
+    echo "Matrix creation skipped. All other analyses are completed."
+fi
 
 
 
