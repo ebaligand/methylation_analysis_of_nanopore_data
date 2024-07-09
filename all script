@@ -66,13 +66,6 @@ destination="./data_pod5"
 
 for folder in $data_folder; do
     id_patient=$(basename "$folder")
-    pod5_files=$(find "$folder" -name '*.pod5')
-
-    if [ -n "$pod5_files" ]; then
-        echo "Skipping conversion for $folder as POD5 files already exist."
-        continue
-    fi
-
     mkdir -p "$destination/$id_patient"
     
     singularity exec --nv ./image_singularity/fast5_to_pod5.sif pod5 convert fast5 "$folder"/*.fast5 --output "$destination/$id_patient" --one-to-one "$folder"
