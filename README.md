@@ -56,7 +56,7 @@ singularity build modkit.sif docker://ontresearch/modkit:mr398_shab20df82474168d
 singularity build samtools.sif docker://biocontainers/samtools:v1.9-4-deb_cv1 # Samtools
 ```
 ## Copy data
-To copy fast5 files in the server, you can use the following strategy: 
+To copy FAST5 files in the server, you can use the following strategy: 
 
 - Step 1 : create 'data_import.txt' file with in the first collumn the patient id, an tabulation and in the second collumn the path toward fast5 files of this patient.
 Example:
