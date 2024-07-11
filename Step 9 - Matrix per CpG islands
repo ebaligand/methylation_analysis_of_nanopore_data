@@ -1,0 +1,36 @@
+import pandas as pd
+
+# Read files
+meth_data = pd.read_csv('./matrix/result_matrix/matrix.csv', index_col=0)
+annotations = pd.read_csv('./reference/hg38-cpgIslands-toannot.bed',
+                          sep='\t', header=None, names=['chrom', 'start', 'end', 'cpg'])
+
+# Convert start and end columns to integers
+annotations['start'] = annotations['start'].astype(int)
+annotations['end'] = annotations['end'].astype(int)
+
+# Sort annotations for efficient binary search
+annotations = annotations.sort_values(by=['chrom', 'start', 'end'])
+
+# Function to find the annotation corresponding to a chromosome position
+def find_annotation(chrom_pos):
+    chrom, pos = chrom_pos.split(':')
+    pos = int(pos)
+    sub_annotations = annotations[annotations['chrom'] == chrom]
+    idx = sub_annotations['start'].searchsorted(pos, side='right') - 1
+    if idx >= 0 and idx < len(sub_annotations):
+        if sub_annotations.iloc[idx]['start'] <= pos <= sub_annotations.iloc[idx]['end']:
+            return sub_annotations.iloc[idx]['cpg']
+    return None
+
+# Apply this function to each column of meth_data
+meth_data.columns = pd.MultiIndex.from_tuples([(find_annotation(col), col) for col in meth_data.columns])
+
+# Filter columns without associated annotation
+meth_data = meth_data.loc[:, meth_data.columns.get_level_values(0).notna()]
+
+# Transpose the DataFrame, apply groupby, then transpose again
+meth_mean_per_annotation = meth_data.T.groupby(level=0).mean().T
+
+# Save the new matrix
+meth_mean_per_annotation.to_csv('./matrix/result_matrix/CpG_matrix.csv')
