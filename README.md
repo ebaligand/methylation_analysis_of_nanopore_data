@@ -11,11 +11,11 @@ From FAST5 data, this workflow allows:
 * Do a PCA for the data visualization
 
 ## Languages
-The scripts have been developed in bash and python languages.
+The scripts have been developed in bash and python languages.  
 So, Python must be downloaded to your working server to complete certain steps. You also need [numpy](https://numpy.org) and [pandas](https://numpy.org) packages.
 
 ## Tips 
-Depending on the size of the data processed, consider using [screen](https://doc.ubuntu-fr.org/screen).
+Depending on the size of the data processed, consider using [screen](https://doc.ubuntu-fr.org/screen).  
 
 Some functionality:
 ```bash
@@ -39,9 +39,9 @@ head file_name / cat file_name / ls file_name / less file_name # To see the file
 ```
 
 ## Reference
-The version of the reference genome is as follows: [Genome reference](https://ftp.ensembl.org/pub/release-112/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.alt.fa.gz).
-The version of the annotation genome file is as follows: [Annotation genome file](https://ftp.ensembl.org/pub/release-112/gtf/homo_sapiens/Homo_sapiens.GRCh38.112.gtf.gz).
-A CpG island annotation file is available on this Git page: "hg38-cpgIslands.bed". You can copy this file in your server and use it.
+The version of the reference genome is as follows: [Genome reference](https://ftp.ensembl.org/pub/release-112/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.alt.fa.gz).  
+The version of the annotation genome file is as follows: [Annotation genome file](https://ftp.ensembl.org/pub/release-112/gtf/homo_sapiens/Homo_sapiens.GRCh38.112.gtf.gz).  
+A CpG island annotation file is available on this Git page: "hg38-cpgIslands.bed". You can copy this file in your server and use it.  
 
 Script for upload the references in your workspace: 
 ```bash
