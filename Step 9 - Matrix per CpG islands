@@ -3,7 +3,7 @@ import pandas as pd
 
 # Read files
 meth_data = pd.read_csv('./matrix/result_matrix/matrix.csv', index_col=0)
-annotations = pd.read_csv('./reference/hg38-cpgIslands-toannot.bed',
+annotations = pd.read_csv('./reference/hg38-cpgIslands.bed',
                           sep='\t', header=None, names=['chrom', 'start', 'end', 'cpg'])
 
 # Convert start and end columns to integers
