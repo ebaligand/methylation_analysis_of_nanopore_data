@@ -5,12 +5,7 @@ This document aims to present the workflow for conducting methylation analysis o
 From FAST5 or POD5 data, this workflow allows: 
 
 * Convert FAST5 data to POD5 data 
-* Base Calling with [Dorado](https://github.com/nanoporetech/dorado?tab=readme-ov-file#features)  
-  Note: The raw file format for the CCUS group is pod5 and a sampling frequency of 5 kHz.    
-  The raw file format for the other groups are fast5 and a sample rate of 4 kHz.    
-  The model used for basecalling is different:        
-    - dna_r10.4.1_e8.2_400bps_hac@v5.0.0 for files in the CCUS group        
-    - dna_r10.4.1_e8.2_400bps_hac@v4.1.0 for files from other groups  
+* Base Calling with [Dorado](https://github.com/nanoporetech/dorado?tab=readme-ov-file#features)
 * Methylation Calling with [Modkit](https://github.com/nanoporetech/modkit)
 * Build methylation percent matrix
 * Do a PCA for the data visualization
