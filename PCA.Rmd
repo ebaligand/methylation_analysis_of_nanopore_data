@@ -1,0 +1,128 @@
+---
+title: "PCA"
+output: html_document
+date: "2024-07-17"
+---
+
+## IMPORT PACKAGES
+```{r}
+library(FactoMineR)
+library(data.table)
+library(ggplot2)
+library(factoextra)
+library(dendextend)
+```
+
+## IMPORT MATRIX
+```{r}
+matrix <- read.csv("/path/to/matrix.csv", header = TRUE, row.names = 1)
+```
+
+## IMPORT METADATA
+```{r}
+metadata <- read.csv("/path/to/metadata.csv", header = TRUE, row.names = 1, sep = ";")
+```
+
+## ADD INTEREST METADATA IN MATRIX
+```{r}
+matrix$col_name_metadata <- metadata$col_name_metadata[match(row.names(matrix), row.names(metadata))]
+```
+
+Strategy : 
+1. CTRL + f (an element appears at the top of the code page)
+2. Find = col_name_metadata and Replace = your metadata of interest (ex: group)
+3. clic on All (at the end of the line)
+
+## ACP
+```{r}
+matrix.acp <- PCA(matrix,graph=F, quali.sup = "col_name_metadata") 
+```
+
+## SCREEPLOT
+```{r}
+fviz_eig(matrix.acp, addlabels = TRUE, ylim = c(0, 60), barfill = "gray", barcolor = "gray") +
+  ggtitle("Screeplot") +
+  xlab("Main component") +
+  ylab("Percentage of variance explained") +
+  theme_classic() +  
+  theme(
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank()
+  )
+```
+
+## GRAPH OF INDIVIDUALS
+```{r}
+plot(matrix.acp, habillage = "col_name_metadata", palette = c("human" = "blueviolet", "Cat" = "orange", "Monkey" = "yellowgreen", "Dog" = "blue"), cex = 0.5, title = "Individuals graph", label = "none")
+```
+
+## GRAPH OF VARIABLES
+```{r}
+plot(matrix.acp, choix = "var", cex = 0.5)
+```
+
+## CONTRIBUTION OF VARIABLES TO DIM 1
+```{r}
+nb_col <- ncol(matrix)
+contrib <- matrix.acp$var$contrib * 100
+sorted_contrib <- contrib[order(contrib[, "Dim.1"], decreasing = TRUE), ]
+top_contrib <- sorted_contrib[1:nb_col-1, ]
+top_contrib_df <- as.data.frame(top_contrib)
+top_contrib_df$variable <- rownames(top_contrib_df)
+ggplot(top_contrib_df, aes(x = reorder(variable, Dim.1), y = Dim.1)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Top contributions of variables to dimension 1",
+       x = "Variable",
+       y = "Contribution to Dim.1 (%)") +
+  theme_minimal() 
+```
+
+## CONTRIBUTION OF INDIVIDUALS TO DIM 1
+```{r}
+nb_row <- nrow(matrix)
+contrib <- matrix.acp$ind$contrib 
+sorted_contrib <- contrib[order(contrib[, "Dim.1"], decreasing = TRUE), ]
+top_contrib <- sorted_contrib[1:nb_row-1, ]
+top_contrib_df <- as.data.frame(top_contrib)
+top_contrib_df$variable <- rownames(top_contrib_df)
+top_contrib_df$col_name_metadata <- matrix$col_name_metadata[match(top_contrib_df$variable, rownames(matrix))]
+ggplot(top_contrib_df, aes(x = reorder(variable, Dim.1), y = Dim.1, fill = col_name_metadata)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Top contributions of individuals to dimension 1",
+       x = "Individus",
+       y = "Contribution to Dim.1 (%)") +
+  theme_minimal() +
+  scale_fill_manual(values = c("human" = "blueviolet", "Cat" = "orange", "Monkey" = "yellowgreen", "Dog" = "blue")) +
+  theme(axis.text.y = element_text(size = 6))
+```
+
+## CLUSTERING 
+```{r}
+ind_coords <- matrix.acp$ind$coord
+dist_matrix <- dist(ind_coords, method = "manhattan")
+hc <- hclust(dist_matrix, method = "ward.D2")
+dend <- as.dendrogram(hc)
+group_colors <- as.character(matrix$col_name_metadata)
+colors <- c("Human" = "blueviolet", "Cat" = "orange", "Monkey" = "yellowgreen", "Dog" = "blue")
+group_colors <- colors[group_colors]
+dend <- color_branches(dend, k = 4, groupLabels = FALSE)
+labels_colors(dend) <- group_colors[order.dendrogram(dend)]
+plot(dend, main = "Dendrogramme du clustering hiérarchique", cex = 0.5)
+#rect.dendrogram(dend, k = 3, border = "red")
+```
+
+```{r}
+inertie <- sort(hc$height, decreasing = TRUE)
+plot(inertie[1:20], type = "s", xlab = "Number of classes", ylab = "Inertia", lwd = 2)
+grid()
+k <- 4 # to configure
+abline(v = k, col = "red", lty = 3)
+points(k, inertie[k], pch = 16, cex = 2, col = "red")
+```
+
+
+
+
+
