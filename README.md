@@ -65,7 +65,7 @@ To begin, your need to build the images for tools with [Docker hub](https://hub.
 
 ```bash
 singularity build fast5_to_pod5.sif docker://chrisamiller/pod5-tools:0.2.4 # Convert FAST5 to POD5
-singularity build dorado.sif docker://nanoporetech/dorado:shaa5cd803bdb5f3cac5c612e47ea6391b882861b8b # Dorado 
+singularity build dorado.sif docker://nanoporetech/dorado:sha58b978562389bd0f1842601fb83cdf1eb2920218 # Dorado 
 singularity build modkit.sif docker://ontresearch/modkit:mr398_shab20df82474168dd15e8ace78ff38b8bcb8b7b6fb # Modkit
 singularity build samtools.sif docker://biocontainers/samtools:v1.9-4-deb_cv1 # Samtools
 ```
