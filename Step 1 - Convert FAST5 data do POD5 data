@@ -1,10 +1,10 @@
 ```bash
 # Create a directory named data_pod5
-mkdir ./data_pod5
+mkdir ./data_pod5 # Comment if destination folder already exists
 
 # Find all directories at the specified path
-data_folder=$(find [/path/to/data_fast5] -mindepth 1 -maxdepth 1 -type d)
-destination="./data_pod5"
+data_folder=$(find /path/to/data_fast5 -mindepth 1 -maxdepth 1 -type d) # Replace /path/to/data_fast5 
+destination="./data_pod5" # You can replace the destination path
 
 # Loop through each folder found
 for folder in $data_folder; do
