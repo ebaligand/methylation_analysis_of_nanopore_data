@@ -129,16 +129,13 @@ if [[ "$create_matrix" =~ ^[Yy]$ ]]; then
 
     # Create modified txt from bed file
 
-    bed_file=$(find ./matrix/bed_modified/*_filtered.bed)
-
-    for bed in $bed_file; do
-        id_patient=$(basename "$bed" _filtered.bed)
-        awk -v pid="$id_patient" '
-            $1 ~ /^chr([1-9]|1[0-9]|2[0-2]|[XYM])$/ {
-                print pid, $1":"$2, $11
-            }
-        ' "$bed" > "./matrix/bed_modified/${id_patient}_modified.txt"
-    done
+    filtered_bed="./matrix/bed_modified/${id_patient}_filtered.bed"
+    awk -v pid="$id_patient" '
+        $1 ~ /^chr([1-9]|1[0-9]|2[0-2]|[XYM])$/ {
+            print pid, $1":"$2, $11
+        }
+    ' "$filtered_bed" > "./matrix/bed_modified/${id_patient}_modified.txt"
+done
 
 # Build methylation percent matrix
 
