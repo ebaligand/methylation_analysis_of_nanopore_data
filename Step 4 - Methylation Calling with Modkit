@@ -1,9 +1,9 @@
 ```bash
 # Create a directory named result_modkit
-mkdir ./result_modkit
+mkdir ./result_modkit # Create a folder where the methylation calling results will be stored
 
 # Find all sorted BAM files in the result_dorado directory
-bam_file_sorted=$(find ./result_dorado/*_sorted.bam)
+bam_file_sorted=$(find ./result_dorado/*_sorted.bam) # Path to sorted bam files 
 
 # Loop through each sorted BAM file found
 for bam in $bam_file_sorted; do 
