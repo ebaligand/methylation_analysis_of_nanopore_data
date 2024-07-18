@@ -1,7 +1,7 @@
 ```python3
 import pandas as pd
 
-nb_Kb = 1000000
+nb_Kb = 1000000 # Bins by 1 Mb (change this number)
 
 # Read basic matrix 
 meth_data = pd.read_csv('./matrix/result_matrix/matrix.csv', index_col=0) 
