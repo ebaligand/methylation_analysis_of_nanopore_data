@@ -18,7 +18,7 @@ meth_data.columns = pd.MultiIndex.from_tuples([(get_segment(col), col) for col i
 
 meth_data = meth_data.loc[:, meth_data.columns.get_level_values(0).notna()]
 
-meth_mean_per_segment = meth_data.T.groupby(level=0).mean().T
+meth_mean_per_segment = meth_data.T.groupby(level=0).mean().T # Replace "mean" with standard deviation "std" or median "median" 
 
 # Save new matrix per number of Kb
 meth_mean_per_segment.to_csv(f'./matrix/result_matrix/{nb_Kb}Kb_matrix.csv')
