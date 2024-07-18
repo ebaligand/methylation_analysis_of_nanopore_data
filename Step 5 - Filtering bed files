@@ -1,3 +1,4 @@
+```bash
 # Find all BED files in the result_modkit directory
 bed_files=$(find ./result_modkit/*.bed)
 
@@ -19,3 +20,4 @@ for bed in $bed_files; do
         }
     ' "$filtered_bed" > "./matrix/bed_modified/${id_patient}_modified.txt"
 done
+```
