@@ -19,7 +19,7 @@ mkdir -p image_singularity
 cd image_singularity
 
 singularity build fast5_to_pod5.sif docker://chrisamiller/pod5-tools:0.2.4 # Convertir FAST5 en POD5
-singularity build dorado.sif docker://nanoporetech/dorado:shaa5cd803bdb5f3cac5c612e47ea6391b882861b8b # Dorado
+singularity build dorado.sif docker://nanoporetech/dorado:sha58b978562389bd0f1842601fb83cdf1eb2920218 # Dorado
 singularity build modkit.sif docker://ontresearch/modkit:mr398_shab20df82474168dd15e8ace78ff38b8bcb8b7b6fb # Modkit
 singularity build samtools.sif docker://biocontainers/samtools:v1.9-4-deb_cv1 # Samtools
 
@@ -113,22 +113,23 @@ echo "Methylation Calling successful"
 read -p "Do you want to create the matrix? (Y/N): " create_matrix
 
 if [[ "$create_matrix" =~ ^[Yy]$ ]]; then
-    # Filtering BED files
-    bed_file=$(find ./result_modkit/*.bed)
-
-    for bed in $bed_file; do
-        id_patient=$(basename "$bed" .bed)
-        awk '$4=="m"' "$bed" > "./result_modkit/${id_patient}_filtered.bed"
-    done
-    echo "Filtering is over"
-
-    # Create modified txt from bed file
 
     mkdir ./matrix
     mkdir ./matrix/bed_modified
     mkdir ./matrix/result_matrix
 
-    bed_file=$(find ./result_modkit/*_filtered.bed)
+    # Filtering BED files
+    bed_file=$(find ./result_modkit/*.bed)
+
+    for bed in $bed_file; do
+        id_patient=$(basename "$bed" .bed)
+        awk '$4=="m"' "$bed" > "./matrix/bed_modified/${id_patient}_filtered.bed"
+    done
+    echo "Filtering is over"
+
+    # Create modified txt from bed file
+
+    bed_file=$(find ./matrix/bed_modified/*_filtered.bed)
 
     for bed in $bed_file; do
         id_patient=$(basename "$bed" _filtered.bed)
@@ -142,20 +143,23 @@ if [[ "$create_matrix" =~ ^[Yy]$ ]]; then
 # Build methylation percent matrix
 
 python3 - <<EOF
-import os
-import csv
-
 # Directory containing the modified BED files
-directory = './matrix/bed_modified'
+input_directory = './matrix/bed_modified'
+
+# Directory to save the result matrix
+output_directory = './matrix/result_matrix'
+
+# Ensure the output directory exists
+os.makedirs(output_directory, exist_ok=True)
 
 # Dictionary to store data from the files
 data = {}
 
 # Loop through each file in the directory
-for filename in os.listdir(directory):
+for filename in os.listdir(input_directory):
    # Check if the file ends with '.txt'
    if filename.endswith('.txt'):
-       filepath = os.path.join(directory, filename)
+       filepath = os.path.join(input_directory, filename)
        # Open each file and read its contents line by line
        with open(filepath, 'r') as file:
            # Process each line in the file
@@ -182,7 +186,7 @@ for col1, col2_data in data.items():
        matrix[col1][col2] = col3
 
 # Define the output file path for the CSV matrix
-output_filepath = os.path.join(directory, './matrix/result_matrix/matrix.csv')
+output_filepath = os.path.join(output_directory, 'matrix.csv')
 
 # Write the matrix to a CSV file
 with open(output_filepath, 'w', newline='') as csvfile:
@@ -195,7 +199,7 @@ with open(output_filepath, 'w', newline='') as csvfile:
        writer.writerow(row)
 
 # Print a message indicating successful creation of the matrix
-print(f'Matrix created successfully !')
+print(f'Matrix created successfully and saved to {output_filepath}!')
 EOF
 
     echo "All analysis are over ! You can find your matrix at the following path : ./matrix/result_matrix/matrix.csv. Now, it is possible to start other matrix more specific to make PCA analysis."
