@@ -35,6 +35,9 @@ nano bash_script.sh # To create bash script or modify it if the script exists
 bash bash_script.sh # To start bash script
 nano python_script.py # To create python script
 python3 python_script.py # To start python script
+htop # View the scripts launched
+htop -U nom_utilisateur # View only my scripts launched
+nvidia-smi # See if GPU is used
 head file_name / cat file_name / ls file_name / less file_name # To see the file 
 ```
 
