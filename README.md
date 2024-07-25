@@ -42,16 +42,16 @@ head file_name / cat file_name / ls file_name / less file_name # To see the file
 ```
 
 ## Reference
-The version of the reference genome is as follows: [Genome reference](https://ftp.ensembl.org/pub/release-112/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.alt.fa.gz).  
+The version of the reference genome is as follows: [Genome reference](https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz).  
 The version of the annotation genome file is as follows: [Annotation genome file](https://ftp.ensembl.org/pub/release-112/gtf/homo_sapiens/Homo_sapiens.GRCh38.112.gtf.gz).  
 A CpG island annotation file is available on this Git page: "hg38-cpgIslands.bed". You can copy this file in your server and use it.  
 
 Script for upload the references in your workspace: 
 ```bash
 # The genomic reference file
-GENOME_URL="https://ftp.ensembl.org/pub/release-112/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.alt.fa.gz"
-wget -O Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz "$GENOME_URL"
-gunzip Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz
+GENOME_URL="https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz"
+wget -O hg38.fa.gz "$GENOME_URL"
+gunzip hg38.fa.gz
 
 
 # The genomic annotation file
