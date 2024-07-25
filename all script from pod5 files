@@ -1,6 +1,24 @@
 #!/bin/bash
 
-# Ask the user to enter a path to their data
+# Create necessary directories
+mkdir -p ./methylation_analysis/{data_pod5,result_dorado,result_modkit,result_matrix,reference,image_singularity}
+
+# Change directory to image_singularity and build the singularity images
+cd ./methylation_analysis/image_singularity
+# singularity build fast5_to_pod5.sif docker://chrisamiller/pod5-tools:0.2.4
+singularity build dorado.sif docker://nanoporetech/dorado:sha58b978562389bd0f1842601fb83cdf1eb2920218
+singularity build modkit.sif docker://ontresearch/modkit:mr398_shab20df82474168dd15e8ace78ff38b8bcb8b7b6fb
+singularity build samtools.sif docker://biocontainers/samtools:v1.9-4-deb_cv1
+
+# Change directory to reference and download the genomic reference file
+cd ../reference
+GENOME_URL="https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz"
+wget -O hg38.fa.gz "$GENOME_URL"
+gunzip hg38.fa.gz
+
+cd ../..
+
+# Prompt the user to enter a path to their data
 read -p "Please enter the path to your POD5 data: " data
 
 # Check if the entered path exists
@@ -9,182 +27,57 @@ if [ ! -d "$data" ]; then
     exit 1
 fi
 
-# Create the workspace
-mkdir -p methylation_analysis
-cd methylation_analysis
-echo "'methylation_analysis' folder is created"
+cd ./methylation_analysis
 
-# Create the Singularity image
-mkdir -p image_singularity
-cd image_singularity
+# Trouve tous les sous-répertoires à l'intérieur du chemin spécifié
+data_folders=$(find "$data" -mindepth 1 -maxdepth 1 -type d) # Remplacez /path/to/data_fast5 par votre chemin vers les fichiers fast5
+destination="./data_pod5"
 
-#singularity build fast5_to_pod5.sif docker://chrisamiller/pod5-tools:0.2.4 # Convertir FAST5 en POD5
-singularity build dorado.sif docker://nanoporetech/dorado:shaa5cd803bdb5f3cac5c612e47ea6391b882861b8b # Dorado
-singularity build modkit.sif docker://ontresearch/modkit:mr398_shab20df82474168dd15e8ace78ff38b8bcb8b7b6fb # Modkit
-singularity build samtools.sif docker://biocontainers/samtools:v1.9-4-deb_cv1 # Samtools
+# Boucle à travers chaque dossier trouvé
+for folder in $data_folders; do
+    # Récupère le nom de base du dossier, qui est l'ID du patient
+    id_patient=$(basename "$folder")
+    # Crée un répertoire pour chaque ID de patient dans le répertoire de destination
+    mkdir -p "$destination/$id_patient"
 
-cd ..
+    # Copie le contenu du dossier source vers le dossier de destination
+    cp -r "$folder"/* "$destination/$id_patient/"
+done
 
-# Upload the genomic reference file
-mkdir -p reference
-cd reference
+# Ensure that the scripts exist before executing them
+SCRIPT_DIR="../script_git"
 
-GENOME_URL="https://ftp.ensembl.org/pub/release-112/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.alt.fa.gz"
-wget -O Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz "$GENOME_URL"
-
-if [ $? -eq 0 ]; then
-    echo "Download successful."
+if [ -f "$SCRIPT_DIR/2-basecalling_dorado_model_v5.0.0.sh" ]; then
+    bash "$SCRIPT_DIR/2-basecalling_dorado_model_v5.0.0.sh"
 else
-    echo "Error while downloading."
+    echo "2-basecalling_dorado_model_v5.0.0.sh not found in $SCRIPT_DIR!"
     exit 1
 fi
 
-gunzip Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz
-echo "The human genome has been downloaded and unzipped into "/methylation_analysis/reference"."
-
-# Upload the genomic annotation file
-# ANNOTATION_URL="https://ftp.ensembl.org/pub/release-112/gtf/homo_sapiens/Homo_sapiens.GRCh38.112.gtf.gz"
-# wget -O Homo_sapiens.GRCh38.112.gtf.gz "$ANNOTATION_URL"
-
-# if [ $? -eq 0 ]; then
-    # echo "Download successful."
-# else
-    # echo "Error while downloading."
-    # exit 1
-# fi
-
-# gunzip Homo_sapiens.GRCh38.112.gtf.gz
-# echo "The human genome annotation has been downloaded and unzipped into "/methylation_analysis/reference"."
-
-cd ..
-
-# Base Calling - Dorado 
-mkdir ./result_dorado
-
-data_folder=$(find "$data" -mindepth 1 -maxdepth 1 -type d)
-
-for folder in $data_folder; do
-    id_patient=$(basename "$folder")
-
-    singularity exec --nv ./image_singularity/dorado.sif dorado basecaller --reference ./reference/*.fa /models/dna_r10.4.1_e8.2_400bps_hac@v5.0.0 "$folder" --modified-bases-models /models/dna_r10.4.1_e8.2_400bps_hac@v5.0.0_5mCG_5hmCG@v2 > ./result_dorado/"$id_patient.bam"
-done
-echo "Base Calling successful"
-
-# Indexing and sorted BAM files
-bam_file=$(find ./result_dorado/*.bam)
-
-for bam in $bam_file; do
-    id_patient=$(basename "$bam" .bam)
-    sorted_bam="./result_dorado/${id_patient}_sorted.bam"
-    
-    singularity exec --nv ./image_singularity/samtools.sif samtools sort -o "$sorted_bam" "$bam"
-    
-    singularity exec --nv ./image_singularity/samtools.sif samtools index "$sorted_bam"
-done
-echo "Indexing and sorted BAM files successful"
-
-# Methylation Calling with Modkit
-mkdir ./result_modkit
-
-bam_file_sorted=$(find ./result_dorado/*_sorted.bam)
-
-for bam in $bam_file_sorted; do 
-    id_patient=$(basename "$bam" _sorted.bam)
-    
-    singularity exec --nv ./image_singularity/modkit.sif modkit pileup "$bam" ./result_modkit/"$id_patient.bed" --ref ./reference/*.fa --combine-strands --cpg
-done
-echo "Methylation Calling successful"
-
-# Ask the user if they want to create the matrix
-read -p "Do you want to create the matrix? (Y/N): " create_matrix
-
-if [[ "$create_matrix" =~ ^[Yy]$ ]]; then
-    # Filtering BED files
-    bed_file=$(find ./result_modkit/*.bed)
-
-    for bed in $bed_file; do
-        id_patient=$(basename "$bed" .bed)
-        awk '$4=="m"' "$bed" > "./result_modkit/${id_patient}_filtered.bed"
-    done
-    echo "Filtering is over"
-
-    # Create modified txt from bed file
-
-    mkdir ./matrix
-    mkdir ./matrix/bed_modified
-    mkdir ./matrix/result_matrix
-
-    bed_file=$(find ./result_modkit/*_filtered.bed)
-
-    for bed in $bed_file; do
-        id_patient=$(basename "$bed" _filtered.bed)
-        awk -v pid="$id_patient" '
-            $1 ~ /^chr([1-9]|1[0-9]|2[0-2]|[XYM])$/ {
-                print pid, $1":"$2, $11
-            }
-        ' "$bed" > "./matrix/bed_modified/${id_patient}_modified.txt"
-    done
-
-# Build methylation percent matrix
-
-python3 - <<EOF
-import os
-import csv
-
-# Directory containing the modified BED files
-directory = './matrix/bed_modified'
-
-# Dictionary to store data from the files
-data = {}
-
-# Loop through each file in the directory
-for filename in os.listdir(directory):
-   # Check if the file ends with '.txt'
-   if filename.endswith('.txt'):
-       filepath = os.path.join(directory, filename)
-       # Open each file and read its contents line by line
-       with open(filepath, 'r') as file:
-           # Process each line in the file
-           for line in file:
-               # Split the line into parts based on whitespace
-               parts = line.strip().split()
-               col1, col2, col3 = parts[0], parts[1], parts[2]
-               # If the first column is not already in the data dictionary, add it
-               if col1 not in data:
-                   data[col1] = {}
-               # Store the value from the third column in the data dictionary
-               data[col1][col2] = col3
-
-# Get unique values from columns 1 and 2
-unique_col1 = sorted(data.keys())
-unique_col2 = sorted({col2 for col1_data in data.values() for col2 in col1_data.keys()})
-
-# Create a matrix dictionary with unique column values as keys
-matrix = {col1: {col2: None for col2 in unique_col2} for col1 in unique_col1}
-
-# Populate the matrix dictionary with values from the data dictionary
-for col1, col2_data in data.items():
-   for col2, col3 in col2_data.items():
-       matrix[col1][col2] = col3
-
-# Define the output file path for the CSV matrix
-output_filepath = os.path.join(directory, './matrix/result_matrix/matrix.csv')
-
-# Write the matrix to a CSV file
-with open(output_filepath, 'w', newline='') as csvfile:
-   writer = csv.writer(csvfile)
-   # Write the header row with column names
-   writer.writerow([''] + unique_col2)
-   # Write data rows to the CSV file
-   for col1 in unique_col1:
-       row = [col1] + [matrix[col1][col2] if matrix[col1][col2] is not None else 'NULL' for col2 in unique_col2]
-       writer.writerow(row)
-
-# Print a message indicating successful creation of the matrix
-print(f'Matrix created successfully !')
-EOF
-
-    echo "All analysis are over ! You can find your matrix at the following path : ./matrix/result_matrix/matrix.csv. Now, it is possible to start other matrix more specific to make PCA analysis."
+if [ -f "$SCRIPT_DIR/3-indexing_sorted_bam_files.sh" ]; then
+    bash "$SCRIPT_DIR/3-indexing_sorted_bam_files.sh"
 else
-    echo "Matrix creation skipped. All other analyses are completed."
+    echo "3-indexing_sorted_bam_files.sh not found in $SCRIPT_DIR!"
+    exit 1
+fi
+
+if [ -f "$SCRIPT_DIR/4-methylationcalling_modkit.sh" ]; then
+    bash "$SCRIPT_DIR/4-methylationcalling_modkit.sh"
+else
+    echo "4-methylationcalling_modkit.sh not found in $SCRIPT_DIR!"
+    exit 1
+fi
+
+if [ -f "$SCRIPT_DIR/5-filtering_bed_files.sh" ]; then
+    bash "$SCRIPT_DIR/5-filtering_bed_files.sh"
+else
+    echo "5-filtering_bed_files.sh not found in $SCRIPT_DIR!"
+    exit 1
+fi
+
+if [ -f "$SCRIPT_DIR/6-basic_matrix.py" ]; then
+    python3 "$SCRIPT_DIR/6-basic_matrix.py"
+else
+    echo "6-basic_matrix.py not found in $SCRIPT_DIR!"
+    exit 1
 fi
