@@ -22,5 +22,4 @@ for bed in $bed_files; do
 done
 # You can eliminate chromosomes from the analysis by deleting them on line 18 (exemple to exclude the Y chromosome : chr([1-9]|1[0-9]|2[0-2]|[XM])
 # To keep the hydroxymethylation information, replace this: '$4=="m"' with that: '$4=="m" || $4=="h"'
-
 ```
