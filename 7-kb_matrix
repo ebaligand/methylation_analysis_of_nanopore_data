@@ -4,7 +4,7 @@ import pandas as pd
 nb_Kb = 1000000 # Bins by 1 Mb (change this number)
 
 # Read basic matrix 
-meth_data = pd.read_csv('./matrix/result_matrix/matrix.csv', index_col=0) 
+meth_data = pd.read_csv('./result_matrix/matrix.csv', index_col=0) 
 
 def get_segment(chrom_pos, segment_size=nb_Kb):
     chrom, pos = chrom_pos.split(':')
@@ -21,5 +21,5 @@ meth_data = meth_data.loc[:, meth_data.columns.get_level_values(0).notna()]
 meth_mean_per_segment = meth_data.T.groupby(level=0).mean().T # Replace "mean" with standard deviation "std" or median "median" 
 
 # Save new matrix per number of Kb
-meth_mean_per_segment.to_csv(f'./matrix/result_matrix/{nb_Kb}Kb_matrix.csv')
+meth_mean_per_segment.to_csv(f'./result_matrix/{nb_Kb}Kb_matrix.csv')
 ```
