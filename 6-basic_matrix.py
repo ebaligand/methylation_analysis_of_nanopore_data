@@ -1,12 +1,9 @@
 ```python3
-import os
-import csv
-
 # Directory containing the modified BED files
-input_directory = './matrix/bed_modified'
+input_directory = './result_modkit'
 
 # Directory to save the result matrix
-output_directory = './matrix/result_matrix'
+output_directory = './result_matrix'
 
 # Ensure the output directory exists
 os.makedirs(output_directory, exist_ok=True)
