@@ -1,6 +1,6 @@
 ```bash
 # Find all directories at the specified path
-data_folder=$(find /srv/fastscratch/baligandel/git/test/data -mindepth 1 -maxdepth 1 -type d) # Replace /path/to/data_fast5 with your path foward fast5 files
+data_folder=$(find /path/to/data_fast5 -mindepth 1 -maxdepth 1 -type d) # Replace /path/to/data_fast5 with your path foward fast5 files
 destination="./data_pod5"
 
 # Loop through each folder found
