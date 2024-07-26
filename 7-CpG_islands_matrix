@@ -2,7 +2,7 @@
 import pandas as pd
 
 # Read files
-meth_data = pd.read_csv('./matrix/result_matrix/matrix.csv', index_col=0)
+meth_data = pd.read_csv('./result_matrix/matrix.csv', index_col=0)
 annotations = pd.read_csv('./reference/hg38-cpgIslands.bed',
                           sep='\t', header=None, names=['chrom', 'start', 'end', 'cpg'])
 
@@ -34,5 +34,5 @@ meth_data = meth_data.loc[:, meth_data.columns.get_level_values(0).notna()]
 meth_mean_per_annotation = meth_data.T.groupby(level=0).mean().T
 
 # Save the new matrix
-meth_mean_per_annotation.to_csv('./matrix/result_matrix/CpG_matrix.csv')
+meth_mean_per_annotation.to_csv('./result_matrix/CpG_matrix.csv')
 ```
