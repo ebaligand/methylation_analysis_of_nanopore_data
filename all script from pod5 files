@@ -5,18 +5,22 @@ mkdir -p ./methylation_analysis/{data_pod5,result_dorado,result_modkit,result_ma
 
 # Change directory to image_singularity and build the singularity images
 cd ./methylation_analysis/image_singularity
-# singularity build fast5_to_pod5.sif docker://chrisamiller/pod5-tools:0.2.4
 singularity build dorado.sif docker://nanoporetech/dorado:sha58b978562389bd0f1842601fb83cdf1eb2920218
 singularity build modkit.sif docker://ontresearch/modkit:mr398_shab20df82474168dd15e8ace78ff38b8bcb8b7b6fb
 singularity build samtools.sif docker://biocontainers/samtools:v1.9-4-deb_cv1
 
 # Change directory to reference and download the genomic reference file
 cd ../reference
+
 GENOME_URL="https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz"
 wget -O hg38.fa.gz "$GENOME_URL"
 gunzip hg38.fa.gz
+# Uncomment and use this if the annotation file is needed
+# ANNOTATION_URL="https://ftp.ensembl.org/pub/release-112/gtf/homo_sapiens/Homo_sapiens.GRCh38.112.gtf.gz"
+# wget -O Homo_sapiens.GRCh38.112.gtf.gz "$ANNOTATION_URL"
+# gunzip Homo_sapiens.GRCh38.112.gtf.gz
 
-cd ../..
+cd ..
 
 # Prompt the user to enter a path to their data
 read -p "Please enter the path to your POD5 data: " data
@@ -27,22 +31,18 @@ if [ ! -d "$data" ]; then
     exit 1
 fi
 
-cd ./methylation_analysis
 
-# Trouve tous les sous-répertoires à l'intérieur du chemin spécifié
-data_folders=$(find "$data" -mindepth 1 -maxdepth 1 -type d) # Remplacez /path/to/data_fast5 par votre chemin vers les fichiers fast5
+# Find all directories at the specified path
+data_folder=$(find "$data" -mindepth 1 -maxdepth 1 -type d)
 destination="./data_pod5"
 
-# Boucle à travers chaque dossier trouvé
-for folder in $data_folders; do
-    # Récupère le nom de base du dossier, qui est l'ID du patient
+# Loop through each folder found
+for folder in $data_folder; do
     id_patient=$(basename "$folder")
-    # Crée un répertoire pour chaque ID de patient dans le répertoire de destination
     mkdir -p "$destination/$id_patient"
-
-    # Copie le contenu du dossier source vers le dossier de destination
     cp -r "$folder"/* "$destination/$id_patient/"
 done
+
 
 # Ensure that the scripts exist before executing them
 SCRIPT_DIR="../script_git"
@@ -81,3 +81,13 @@ else
     echo "6-basic_matrix.py not found in $SCRIPT_DIR!"
     exit 1
 fi
+
+# Additional error checking for POD5 files
+for folder in "$destination"/*; do
+    for file in "$folder"/*.pod5; do
+        if ! file "$file" | grep -q 'POD5 file format'; then
+            echo "Error: File $file is not a valid POD5 file."
+            exit 1
+        fi
+    done
+done
