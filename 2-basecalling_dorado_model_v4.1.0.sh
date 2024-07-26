@@ -1,7 +1,4 @@
 ```bash
-# Create a directory named result_dorado
-mkdir ./result_dorado # Create a folder where the basecalling results will be stored
-
 # Find all directories in the data_pod5 directory
 data_folder=$(find ./data_pod5 -mindepth 1 -maxdepth 1 -type d) # ./data_pod5 is the path to pod5 files
 
